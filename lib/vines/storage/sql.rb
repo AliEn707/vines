@@ -57,7 +57,7 @@ module Vines
         return if jid.empty?
         xuser = user_by_jid(jid)
         return Vines::User.new(jid: jid).tap do |user|
-          user.name, user.encrypted_password = xuser.name, xuser.password
+          user.name, user.encrypted_password = xuser.name, xuser.encrypted_password
           xuser.contacts.each do |contact|
             groups = contact.groups.map {|group| group.name }
             user.roster << Vines::Contact.new(
@@ -154,7 +154,7 @@ module Vines
           create_table :users, force: args[:force] do |t|
             t.string :jid,      limit: 512, null: false
             t.string :name,     limit: 256, null: true
-            t.string :password, limit: 256, null: true
+            t.string :encrypted_password, limit: 256, null: true
             t.text   :vcard,    null: true
           end
           add_index :users, :jid, unique: true
