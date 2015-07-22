@@ -10,7 +10,7 @@ module Vines
     LOG_LEVELS = %w[debug info warn error fatal].freeze
 
     attr_reader :router
-
+    
     @@instance = nil
     def self.configure(&block)
       @@instance = self.new(&block)
@@ -36,7 +36,15 @@ module Vines
     def certs(dir=nil)
       dir ? @certs = File.expand_path(dir) : @certs
     end
-
+	
+    def pepper(p=nil)
+	if (p)
+		@pepper=p
+	else
+		@pepper
+	end
+    end
+	
     def host(*names, &block)
       names = names.flatten.map {|name| name.downcase }
       dupes = names.uniq.size != names.size || (@vhosts.keys & names).any?

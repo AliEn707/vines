@@ -122,7 +122,7 @@ module Vines
     #
     # Returns nothing.
     def check_config(opts)
-      return if %w[bcrypt init].include?(opts[:command])
+      return if %w[init].include?(opts[:command])
       unless File.exists?(opts[:config])
         puts "No config file found at #{opts[:config]}"
         exit(1)

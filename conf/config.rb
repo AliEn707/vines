@@ -4,6 +4,9 @@
 # 'vines restart' after updating this file.
 
 Vines::Config.configure do
+	
+  pepper "www"
+	
   # Set the logging level to debug, info, warn, error, or fatal. The debug
   # level logs all XML sent and received by the server.
   log :info
@@ -48,8 +51,14 @@ Vines::Config.configure do
   host 'wonderland.lit' do
     cross_domain_messages false
     private_storage false
-    storage 'fs' do
-      dir 'data'
+    storage 'sql' do
+	adapter 'postgresql'
+	host 'localhost'
+	port 5432
+	database 'xmpp'
+	username 'dbuser'
+	password 'passwd'
+	pool 5
     end
     # components 'tea'  => 'secr3t',
     #            'cake' => 'passw0rd'

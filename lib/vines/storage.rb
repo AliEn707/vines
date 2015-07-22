@@ -125,8 +125,8 @@ module Vines
     # Returns a Vines::User object on success, nil on failure.
     def authenticate(username, password)
       user = find_user(username)
-      hash = BCrypt::Password.new(user.password) rescue nil
-      (hash && hash == password) ? user : nil
+      hash = BCrypt::Password.new(user.encrypted_password) rescue nil
+      (hash && hash == "#{password}#{Vines::Config.instance.pepper}") ? user : nil
     end
     wrap_ldap :authenticate
 

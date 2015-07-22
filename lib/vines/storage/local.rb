@@ -30,7 +30,7 @@ module Vines
         file = "user/#{jid}" unless jid.empty?
         record = YAML.load(read(file)) rescue nil
         return User.new(jid: jid).tap do |user|
-          user.name, user.password = record.values_at('name', 'password')
+          user.name, user.encrypted_password = record.values_at('name', 'password')
           (record['roster'] || {}).each_pair do |jid, props|
             user.roster << Contact.new(
               jid: jid,
@@ -43,7 +43,7 @@ module Vines
       end
 
       def save_user(user)
-        record = {'name' => user.name, 'password' => user.password, 'roster' => {}}
+        record = {'name' => user.name, 'password' => user.encrypted_password, 'roster' => {}}
         user.roster.each do |contact|
           record['roster'][contact.jid.bare.to_s] = contact.to_h
         end

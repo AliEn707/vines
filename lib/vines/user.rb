@@ -4,7 +4,7 @@ module Vines
   class User
     include Comparable
 
-    attr_accessor :name, :password, :roster
+    attr_accessor :name, :encrypted_password, :roster
     attr_reader :jid
 
     def initialize(args={})
@@ -12,7 +12,7 @@ module Vines
       raise ArgumentError, 'invalid jid' if @jid.empty?
 
       @name = args[:name]
-      @password = args[:password]
+      @encrypted_password = args[:password]
       @roster = args[:roster] || []
     end
 
@@ -29,7 +29,7 @@ module Vines
     # Update this user's information from the given user object.
     def update_from(user)
       @name = user.name
-      @password = user.password
+      @encrypted_password = user.encrypted_password
       @roster = user.roster.map {|c| c.clone }
     end
 

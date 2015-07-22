@@ -113,6 +113,7 @@ end
   vines/storage/ldap
   vines/storage/local
   vines/storage/null
+  vines/storage/sql
 
   vines/config
   vines/config/host

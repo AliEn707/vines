@@ -57,7 +57,7 @@ module Vines
         return if jid.empty?
         xuser = user_by_jid(jid)
         return Vines::User.new(jid: jid).tap do |user|
-          user.name, user.password = xuser.name, xuser.password
+          user.name, user.encrypted_password = xuser.name, xuser.password
           xuser.contacts.each do |contact|
             groups = contact.groups.map {|group| group.name }
             user.roster << Vines::Contact.new(
@@ -74,7 +74,7 @@ module Vines
       def save_user(user)
         xuser = user_by_jid(user.jid) || Sql::User.new(jid: user.jid.bare.to_s)
         xuser.name = user.name
-        xuser.password = user.password
+        xuser.encrypted_password = user.encrypted_password
 
         # remove deleted contacts from roster
         xuser.contacts.delete(xuser.contacts.select do |contact|

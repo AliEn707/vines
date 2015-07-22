@@ -1,4 +1,4 @@
-# Vines XMPP Server
+# Vines XMPP Server with vines-sql
 
 Vines is an XMPP chat server that supports thousands of simultaneous connections,
 using EventMachine for asynchronous IO. User data is stored in a
