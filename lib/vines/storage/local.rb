@@ -55,11 +55,12 @@ module Vines
         return if jid.empty?
         file = "vcard/#{jid}"
         Nokogiri::XML(read(file)).root rescue nil
-      end
+       end
 
       def save_vcard(jid, card)
         jid = JID.new(jid).bare.to_s
         return if jid.empty?
+#	p Hash.from_xml(card.to_xml)
         save("vcard/#{jid}", card.to_xml)
       end
 

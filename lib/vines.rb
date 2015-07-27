@@ -194,4 +194,7 @@ end
   vines/command/schema
   vines/command/start
   vines/command/stop
+  
+  vines/other/xml_to_hash
+  vines/other/hash_to_vcard
 ].each {|f| require f }
