@@ -102,9 +102,18 @@ module Vines
       clients + @servers.size + @components.size
     end
 
+    #timer for connected clients
+    def start_timer
+	@timer ||= EventMachine::PeriodicTimer.new(3) { check_clients }
+    end
+	
+ 
     private
-
-    # Write all pending stanzas for this domain to the stream. Called after a
+    #TODO: add check for messages of clients
+    def check_clients
+	puts "#{@clients.size} clients connected" #@config.storage
+    end
+   # Write all pending stanzas for this domain to the stream. Called after a
     # s2s stream has successfully connected and we need to dequeue all stanzas
     # we received while waiting for the connection to finish.
     def send_pending(key, stream)

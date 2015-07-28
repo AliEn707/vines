@@ -9,9 +9,9 @@ module Vines
 
       def initialize(config)
         super
-        @session = Client::Session.new(self)
+       @session = Client::Session.new(self)
       end
-
+    
       # Delegate behavior to the session that's storing our stream state.
       def method_missing(name, *args)
         @session.send(name, *args)
@@ -28,6 +28,10 @@ module Vines
           config[:client].send(name, *args)
         end
       end
+	
+	 def encrypt?
+		!@store.files_for_domain(@config.default_domain || domain).nil?
+	end
 
       # Return an array of allowed authentication mechanisms advertised as
       # client stream features.
@@ -59,7 +63,6 @@ module Vines
       end
 
       private
-
       # The `to` domain address set on the initial stream header must not change
       # during stream restarts. This prevents a user from authenticating in one
       # domain, then using a stream in a different domain.

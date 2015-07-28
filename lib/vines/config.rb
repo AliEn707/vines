@@ -49,6 +49,7 @@ module Vines
       names = names.flatten.map {|name| name.downcase }
       dupes = names.uniq.size != names.size || (@vhosts.keys & names).any?
       raise "one host definition per domain allowed" if dupes
+      names<<@default_domain if @default_domain
       names.each do |name|
         @vhosts[name] = Host.new(self, name, &block)
       end
@@ -82,6 +83,13 @@ module Vines
       @ports.values
     end
 
+    def default_domain(a=nil)
+	if (a) then
+		@default_domain=a
+	else
+		@default_domain
+	end
+    end
     # Return true if the domain is virtual hosted by this server.
     def vhost?(domain)
       !!vhost(domain)
@@ -90,7 +98,7 @@ module Vines
     # Return the Host config object for this domain if it's hosted by this
     # server.
     def vhost(domain)
-      @vhosts[domain.to_s]
+      @vhosts[ @default_domain || domain.to_s ] 
     end
 
     # Returns the storage system for the domain or a Storage::Null instance if

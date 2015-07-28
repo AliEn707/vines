@@ -19,6 +19,7 @@ module Vines
       EM.kqueue
       EM.run do
         @config.ports.each {|port| port.start }
+	@config.router.start_timer
       end
     end
   end

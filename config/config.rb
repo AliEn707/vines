@@ -48,6 +48,9 @@ Vines::Config.configure do
   #   pubsub 'games', 'scores'
   # end
 
+  #if you want to connect from different domains
+  #default_domain 'wonderland.lit'
+
   host 'wonderland.lit' do
     cross_domain_messages false
     private_storage false
