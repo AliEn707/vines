@@ -2,7 +2,7 @@
 
 module Vines
   # An X509 certificate store that validates certificate trust chains.
-  # This uses the conf/certs/*.crt files as the list of trusted root
+  # This uses the config/certs/*.crt files as the list of trusted root
   # CA certificates.
   class Store
     @@sources = nil
@@ -46,7 +46,7 @@ module Vines
       end
     end
 
-    # Return the trusted root CA certificates installed in conf/certs. These
+    # Return the trusted root CA certificates installed in config/certs. These
     # certificates are used to start the trust chain needed to validate certs
     # we receive from clients and servers.
     #
@@ -73,10 +73,10 @@ module Vines
     #
     # Finding the certificate and private key file for a domain follows these steps:
     #
-    # - Look for <domain>.crt and <domain>.key files in the conf/certs
+    # - Look for <domain>.crt and <domain>.key files in the config/certs
     #   directory. If found, return those file names, otherwise . . .
     #
-    # - Inspect all conf/certs/*.crt files for certificates that contain the
+    # - Inspect all config/certs/*.crt files for certificates that contain the
     #   domain name either as the subject common name (CN) or as a DNS
     #   subjectAltName. The corresponding private key must be in a file of the
     #   same name as the certificate's, but with a .key extension.
@@ -84,14 +84,14 @@ module Vines
     # So in the simplest configuration, the tea.wonderland.lit encryption files
     # would be named:
     #
-    # - conf/certs/tea.wonderland.lit.crt
-    # - conf/certs/tea.wonderland.lit.key
+    # - config/certs/tea.wonderland.lit.crt
+    # - config/certs/tea.wonderland.lit.key
     #
     # However, in the case of a wildcard certificate for *.wonderland.lit,
     # the files would be:
     #
-    # - conf/certs/wonderland.lit.crt
-    # - conf/certs/wonderland.lit.key
+    # - config/certs/wonderland.lit.crt
+    # - config/certs/wonderland.lit.key
     #
     # These same two files would be returned for the subdomains of:
     #

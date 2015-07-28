@@ -5,7 +5,7 @@ module Vines
   # A Config object is passed to the stream handlers to give them access
   # to server configuration information like virtual host names, storage
   # systems, etc. This class provides the DSL methods used in the
-  # conf/config.rb file.
+  # config/config.rb file.
   class Config
     LOG_LEVELS = %w[debug info warn error fatal].freeze
 
@@ -21,7 +21,7 @@ module Vines
     end
 
     def initialize(&block)
-      @certs = File.expand_path('conf/certs')
+      @certs = File.expand_path('config/certs')
       @vhosts, @ports, @cluster = {}, {}, nil
       @null = Storage::Null.new
       @router = Router.new(self)
