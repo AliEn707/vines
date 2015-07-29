@@ -109,10 +109,29 @@ module Vines
 	
  
     private
-    #TODO: add check for messages of clients
+ 
     def check_clients
-	puts "#{@clients.size} clients connected" #@config.storage
-    end
+	jids=@clients.keys.map!{|c| c.to_s}
+	domains=@config.default_domain ? {@config.default_domain => @clients.keys.map!{|c| c.to_s}} : 
+								@clients.inject({}){|m,(c,v)| m.merge({c.domain=>(m[c.domain] || [])<<c.to_s})}
+	domains.each do |domain, jids|
+		@config.storage(domain).find_messages(jids).each do |m|
+			stamp = Time.at(m[:created_at]).utc
+			doc = Nokogiri::XML::Builder.new
+			doc.message(:type => "chat", :from => m[:from], :to => m[:to]) do |msg|
+			  msg.send(:"body", m[:text])
+			  msg.send(:"delay", "Offline Storage",
+				   :xmlns => NAMESPACES[:delay],
+				   :from => m[:from],
+				   :stamp => stamp.iso8601)
+			end
+			xml = doc.to_xml :save_with => Nokogiri::XML::Node::SaveOptions::NO_DECLARATION
+			sessions=@clients[JID.new(m[:to])]
+			sessions.each{|s| s.write(xml)}
+		end
+	end
+      end
+
    # Write all pending stanzas for this domain to the stream. Called after a
     # s2s stream has successfully connected and we need to dequeue all stanzas
     # we received while waiting for the connection to finish.

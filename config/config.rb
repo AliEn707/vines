@@ -42,6 +42,7 @@ Vines::Config.configure do
   #   cross_domain_messages false
   #   storage 'fs' do
   #     dir 'data'
+  #     messages_file "mess.tmp"
   #   end
   #   components 'tea'  => 'secr3t',
   #              'cake' => 'passw0rd'

@@ -10,6 +10,7 @@ module Vines
 
       def initialize(&block)
         @dir = nil
+	@file="messages.tmp"
         instance_eval(&block)
         unless @dir && File.directory?(@dir) && File.writable?(@dir)
           raise 'Must provide a writable storage directory'
@@ -24,7 +25,11 @@ module Vines
       def dir(dir=nil)
         dir ? @dir = File.expand_path(dir) : @dir
       end
-
+	
+	def messages_file(file=nil)
+		@file=file if file
+	end
+	
       def find_user(jid)
         jid = JID.new(jid).bare.to_s
         file = "user/#{jid}" unless jid.empty?
@@ -63,12 +68,20 @@ module Vines
         save("vcard/#{jid}", Hash.from_xml(card.to_xml).build_hash.to_json)
       end
 
-      def find_message(message)
-      
+      def find_messages(jids)
+		data=get_messages
+		messages=[]
+		data.each{|m| messages<< m if jids.include?(m[:to])}
+		data-=messages
+		put_messages(data)
+		return messages
       end
 
-      def save_message(message)
-       
+      def save_message(from, to, text)
+	      return if text.empty?
+	      p data=get_messages
+	      data<<{from:from,to:to,text:text,created_at:Time.now.to_i}
+	      put_messages(data)
       end
 
       def find_fragment(jid, node)
@@ -86,7 +99,13 @@ module Vines
       end
 
       private
+      def get_messages
+	File.open(@file,"rt"){|f| JSON.parse(f.read, symbolize_names: true)} rescue []
+      end
 
+      def put_messages(data)
+ 	File.open(@file,"wt+"){|f| f.write(data.to_json)}
+      end
       # Resolves a relative file name into an absolute path inside the
       # storage directory.
       #

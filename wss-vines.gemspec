@@ -1,7 +1,7 @@
 require './lib/vines/version'
 
 Gem::Specification.new do |s|
-  s.name         = 'vines'
+  s.name         = 'wss-vines'
   s.version      = Vines::VERSION
   s.summary      = %q[An XMPP chat server that's easy to install and run.]
   s.description  = %q[A scalable XMPP chat server.]
@@ -11,7 +11,7 @@ Gem::Specification.new do |s|
   s.homepage     = 'http://www.getvines.org'
   s.license      = 'MIT'
 
-  s.files        = Dir['[A-Z]*', 'vines.gemspec', '{bin,lib,conf,web}/**/*'] - ['Gemfile.lock']
+  s.files        = Dir['[A-Z]*', 'wss-vines.gemspec', '{bin,lib,conf,web}/**/*'] - ['Gemfile.lock']
   s.test_files   = Dir['test/**/*']
   s.executables  = %w[vines]
   s.require_path = 'lib'

@@ -200,11 +200,11 @@ module Vines
       raise 'subclass must implement'
     end
 
-    def find_messages(message)
+    def find_messages
       raise 'subclass must implement'
     end
 
-    def save_message(message)
+    def save_message(from,to,text)
       raise 'subclass must implement'
     end
 
