@@ -54,14 +54,21 @@ module Vines
         jid = JID.new(jid).bare.to_s
         return if jid.empty?
         file = "vcard/#{jid}"
-        Nokogiri::XML(read(file)).root rescue nil
+        Nokogiri::XML(JSON.parse(read(file)).build_vcard).root rescue nil
        end
 
       def save_vcard(jid, card)
         jid = JID.new(jid).bare.to_s
         return if jid.empty?
-#	p Hash.from_xml(card.to_xml)
-        save("vcard/#{jid}", card.to_xml)
+        save("vcard/#{jid}", Hash.from_xml(card.to_xml).build_hash.to_json)
+      end
+
+      def find_message(message)
+      
+      end
+
+      def save_message(message)
+       
       end
 
       def find_fragment(jid, node)
@@ -71,7 +78,7 @@ module Vines
         Nokogiri::XML(read(file)).root rescue nil
       end
 
-      def save_fragment(jid, node)
+     def save_fragment(jid, node)
         jid = JID.new(jid).bare.to_s
         return if jid.empty?
         file = 'fragment/%s' % fragment_id(jid, node)

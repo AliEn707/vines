@@ -200,6 +200,14 @@ module Vines
       raise 'subclass must implement'
     end
 
+    def find_messages(message)
+      raise 'subclass must implement'
+    end
+
+    def save_message(message)
+      raise 'subclass must implement'
+    end
+
     # Find the private XML fragment previously stored by the user. Private
     # XML storage uniquely identifies fragments by JID, root element name,
     # and root element namespace.
