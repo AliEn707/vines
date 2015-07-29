@@ -79,7 +79,7 @@ module Vines
 
       def save_message(from, to, text)
 	      return if text.empty?
-	      p data=get_messages
+	      data=get_messages
 	      data<<{from:from,to:to,text:text,created_at:Time.now.to_i}
 	      put_messages(data)
       end
