@@ -3,6 +3,9 @@
 module Vines
   module Log
     @@logger = nil
+    def self.log
+	@@logger    
+    end
     def log
       unless @@logger
         @@logger = Logger.new(STDOUT)

@@ -24,6 +24,7 @@ module Vines
         # do nothing
       rescue Exception => e
         puts e.message
+	puts e.backtrace
         exit(1)
       end
     end

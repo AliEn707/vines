@@ -10,6 +10,7 @@ class Hash
         result = Nokogiri::XML(xml_io)
         return { result.root.name.to_sym => xml_node_to_hash(result.root)}
       rescue Exception => e
+      puts "error get hash from xml:#{e}"
         # raise your custom exception here
       end
     end

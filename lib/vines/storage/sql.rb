@@ -4,19 +4,34 @@ module Vines
   class Storage
     class Sql < Storage
       register :sql
-
-      class Contact < ActiveRecord::Base
-        belongs_to :user
-      end
-      class Fragment < ActiveRecord::Base
-        belongs_to :user
+        
+      class Message < ActiveRecord::Base
+	belongs_to :user
+	belongs_to :msg_dest, polymorphic: true
       end
       class Group < ActiveRecord::Base; end
       class User < ActiveRecord::Base
-        has_many :contacts,  :dependent => :destroy
-        has_many :fragments, :dependent => :delete_all
+        has_many :messages, :dependent => :destroy
+        has_many :income_messages, :as =>:msg_dest, :class_name => "Message", :dependent => :destroy
+	has_many :friendships
+	has_many :friends_out, :through => :friendships, :source => :friend
+	has_many :inverse_friendships, :class_name => "Friendship", :foreign_key => "friend_id"
+	has_many :friends_in, :through => :inverse_friendships, :source => :user
+	has_one :profile
+	def friends
+#		user=User.arel_table
+#		friends_out.where(user[:id].not_in(inverse_friendships.select(:user_id).map{|m| m.user_id}))
+		friends_in.where(id: friendships.select(:friend_id))
+	end
       end
-
+      class Friendship < ActiveRecord::Base
+	belongs_to :user, touch: true
+	belongs_to :friend, :class_name => "User", touch: true
+      end
+      class User::Profile < ActiveRecord::Base
+	belongs_to :user
+	serialize :properties, JSON
+      end
       # Wrap the method with ActiveRecord connection pool logic, so we properly
       # return connections to the pool when we're finished with them. This also
       # defers the original method by pushing it onto the EM thread pool because
@@ -32,7 +47,7 @@ module Vines
         defer(method) if deferrable
       end
 
-      %w[adapter host port database username password pool].each do |name|
+      %w[adapter host port database username password pool prepared_statements].each do |name|
         define_method(name) do |*args|
           if args.first
             @config[name.to_sym] = args.first
@@ -57,21 +72,24 @@ module Vines
         return if jid.empty?
         xuser = user_by_jid(jid)
         return Vines::User.new(jid: jid).tap do |user|
-          user.name, user.encrypted_password = xuser.name, xuser.encrypted_password
-          xuser.contacts.each do |contact|
-            groups = contact.groups.map {|group| group.name }
+	  profile=xuser.profile
+          user.name, user.encrypted_password = profile.properties["NAME"],xuser.encrypted_password
+          xuser.friends.each do |contact|
+            groups = ["Friends"]
             user.roster << Vines::Contact.new(
-              jid: contact.jid,
-              name: contact.name,
-              subscription: contact.subscription,
-              ask: contact.ask,
+              jid: contact.email,
+              name: contact.profile.properties["NAME"],
+              subscription: 'both',
+              ask: "",
               groups: groups)
           end
         end if xuser
       end
-      with_connection :find_user
+      with_connection :find_user, defer: false
 
       def save_user(user)
+=begin
+		#add save user if need
         xuser = user_by_jid(user.jid) || Sql::User.new(jid: user.jid.bare.to_s)
         xuser.name = user.name
         xuser.encrypted_password = user.encrypted_password
@@ -104,6 +122,7 @@ module Vines
               groups: groups(contact))
           end
         xuser.save
+=end
       end
       with_connection :save_user
 
@@ -111,45 +130,50 @@ module Vines
         jid = JID.new(jid).bare.to_s
         return if jid.empty?
         if xuser = user_by_jid(jid)
-          Nokogiri::XML(xuser.vcard).root rescue nil
+          Nokogiri::XML(xuser.profile.properties.build_vcard).root rescue nil
         end
       end
-      with_connection :find_vcard
+      with_connection :find_vcard, defer: false
 
       def save_vcard(jid, card)
-        xuser = user_by_jid(jid)
-        if xuser
-          xuser.vcard = card.to_xml
-          xuser.save
+        profile = user_by_jid(jid).profile
+        if profile
+          profile.prorerties = Hash.from_xml(card.to_xml).build_hash
+          profile.save
         end
       end
-      with_connection :save_vcard
+      with_connection :save_vcard, defer: false
+
+     def find_messages(jids)
+		users={}
+		Sql::User.select([:email,:id]).all.each{|u| users[u.id]=u}
+		Message.where(msg_dest_id: Sql::User.where(email: jids).select(:id),msg_dest_type: "User").where("messages.created_at = messages.updated_at").map{|m| m.touch;{from: users[m.user_id].email ,to: users[m.msg_dest_id].email,text: m.data, created_at: m.created_at.to_i}}
+     end
+      with_connection :find_messages, defer: false
+
+      def save_message(from, to, text)
+	      return if from.empty? || to.empty? || text.empty?
+	     Message.create(user_id: user_by_jid(from).id,
+					msg_dest_id: Sql::User.where(email: to).first.id,
+					msg_dest_type: "User",
+					data: text)
+      end
+      with_connection :save_message, defer: false
 
       def find_fragment(jid, node)
-        jid = JID.new(jid).bare.to_s
-        return if jid.empty?
-        if fragment = fragment_by_jid(jid, node)
-          Nokogiri::XML(fragment.xml).root rescue nil
-        end
+       
       end
-      with_connection :find_fragment
+      with_connection :find_fragment, defer: false
 
       def save_fragment(jid, node)
-        jid = JID.new(jid).bare.to_s
-        fragment = fragment_by_jid(jid, node) ||
-          Sql::Fragment.new(
-            user: user_by_jid(jid),
-            root: node.name,
-            namespace: node.namespace.href)
-        fragment.xml = node.to_xml
-        fragment.save
+
       end
-      with_connection :save_fragment
+      with_connection :save_fragment, defer: false
 
       # Create the tables and indexes used by this storage engine.
       def create_schema(args={})
         args[:force] ||= false
-
+=begin
         ActiveRecord::Schema.define do
           create_table :users, force: args[:force] do |t|
             t.string :jid,      limit: 512, null: false
@@ -158,52 +182,23 @@ module Vines
             t.text   :vcard,    null: true
           end
           add_index :users, :jid, unique: true
-
-          create_table :contacts, force: args[:force] do |t|
-            t.integer :user_id,      null: false
-            t.string  :jid,          limit: 512, null: false
-            t.string  :name,         limit: 256, null: true
-            t.string  :ask,          limit: 128, null: true
-            t.string  :subscription, limit: 128, null: false
-          end
-          add_index :contacts, [:user_id, :jid], unique: true
-
-          create_table :groups, force: args[:force] do |t|
-            t.string :name, limit: 256, null: false
-          end
-          add_index :groups, :name, unique: true
-
-          create_table :contacts_groups, id: false, force: args[:force] do |t|
-            t.integer :contact_id, null: false
-            t.integer :group_id,   null: false
-          end
-          add_index :contacts_groups, [:contact_id, :group_id], unique: true
-
-          create_table :fragments, force: args[:force] do |t|
-            t.integer :user_id,   null: false
-            t.string  :root,      limit: 256, null: false
-            t.string  :namespace, limit: 256, null: false
-            t.text    :xml,       null: false
-          end
-          add_index :fragments, [:user_id, :root, :namespace], unique: true
         end
+=end
       end
       with_connection :create_schema, defer: false
 
       private
 
       def establish_connection
-        ActiveRecord::Base.logger = Logger.new('/dev/null')
+        ActiveRecord::Base.logger = Vines::Log::log#ogger.new('/dev/null')
         ActiveRecord::Base.establish_connection(@config)
-        # has_and_belongs_to_many requires a connection so configure the
+	# has_and_belongs_to_many requires a connection so configure the
         # associations here rather than in the class definitions above.
-        Sql::Contact.has_and_belongs_to_many :groups
-        Sql::Group.has_and_belongs_to_many :contacts
-      end
+       end
 
       def user_by_jid(jid)
         jid = JID.new(jid).bare.to_s
-        Sql::User.find_by_jid(jid, :include => {:contacts => :groups})
+        Sql::User.where(email: jid).first
       end
 
       def fragment_by_jid(jid, node)

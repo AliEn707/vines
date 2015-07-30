@@ -63,6 +63,7 @@ Vines::Config.configure do
 	username 'dbuser'
 	password 'passwd'
 	pool 5
+	prepared_statements false
     end
     # components 'tea'  => 'secr3t',
     #            'cake' => 'passw0rd'

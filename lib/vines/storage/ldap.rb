@@ -37,7 +37,7 @@ module Vines
 
         user = if connect(entries.first.dn, password).bind
           name = entries.first[@config[:name_attr]].first
-          User.new(jid: username, name: name.to_s, roster: [])
+          Vines::User.new(jid: username, name: name.to_s, roster: [])
         end
         user
       end
