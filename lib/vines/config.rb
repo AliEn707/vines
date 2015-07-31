@@ -70,7 +70,11 @@ module Vines
       raise "one cluster definition allowed" if @cluster
       @cluster = Cluster.new(self, &block)
     end
-
+    
+    def logger(logger)
+	    Vines::Log::log(logger)
+    end
+    
     def log(level)
       const = Logger.const_get(level.to_s.upcase) rescue nil
       unless LOG_LEVELS.include?(level.to_s) && const

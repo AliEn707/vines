@@ -3,8 +3,12 @@
 module Vines
   module Log
     @@logger = nil
-    def self.log
-	@@logger    
+    def self.log(o=nil)
+	if (o) then 
+		@@logger=o
+	else
+		@@logger
+	end
     end
     def log
       unless @@logger
