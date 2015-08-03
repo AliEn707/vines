@@ -112,8 +112,7 @@ module Vines
  
     def check_clients
 	jids=@clients.keys.map!{|c| c.to_s}
-	domains=@config.default_domain ? {@config.default_domain => @clients.keys.map!{|c| c.to_s}} : 
-								@clients.inject({}){|m,(c,v)| m.merge({c.domain=>(m[c.domain] || [])<<c.to_s})}
+	domains=@clients.inject({}){|m,(c,v)| m.merge({c.domain=>(m[c.domain] || [])<<c.to_s})}
 	domains.each do |domain, jids|
 		@config.storage(domain).find_messages(jids).each do |m|
 			stamp = Time.at(m[:created_at]).utc
@@ -127,7 +126,7 @@ module Vines
 			end
 			xml = doc.to_xml :save_with => Nokogiri::XML::Node::SaveOptions::NO_DECLARATION
 			sessions=@clients[JID.new(m[:to])]
-			sessions.each{|s| s.write(xml)}
+			sessions.each{|s| s.write(xml)} if sessions
 		end
 	end
       end

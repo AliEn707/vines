@@ -77,7 +77,7 @@ module Vines
           xuser.friends.each do |contact|
             groups = ["Friends"]
             user.roster << Vines::Contact.new(
-              jid: contact.email,
+              jid: jid_by_user(contact),
               name: contact.profile.properties["NAME"],
               subscription: 'both',
               ask: "",
@@ -145,16 +145,14 @@ module Vines
       with_connection :save_vcard, defer: false
 
      def find_messages(jids)
-		users={}
-		Sql::User.select([:email,:id]).all.each{|u| users[u.id]=u}
-		Message.where(msg_dest_id: Sql::User.where(email: jids).select(:id),msg_dest_type: "User").where("messages.created_at = messages.updated_at").map{|m| m.touch;{from: users[m.user_id].email ,to: users[m.msg_dest_id].email,text: m.data, created_at: m.created_at.to_i}}
+		Message.where(msg_dest_id: Sql::User.where(id: jids.map!{|j| user_from_jid(j)}).select(:id),msg_dest_type: "User").where("messages.created_at = messages.updated_at").map{|m| m.touch;{from: "#{m.user_id}@wsstudio.tk",to: "#{m.msg_dest_id}@wsstudio.tk",text: m.data, created_at: m.created_at.to_i}}
      end
       with_connection :find_messages, defer: false
 
       def save_message(from, to, text)
 	      return if from.empty? || to.empty? || text.empty?
 	     Message.create(user_id: user_by_jid(from).id,
-					msg_dest_id: Sql::User.where(email: to).first.id,
+					msg_dest_id: user_by_jid(to).id,
 					msg_dest_type: "User",
 					data: text)
       end
@@ -190,15 +188,23 @@ module Vines
       private
 
       def establish_connection
-        ActiveRecord::Base.logger = Vines::Log::log#ogger.new('/dev/null')
+        ActiveRecord::Base.logger = Vines::Log::log#Logger.new('/dev/null')
         ActiveRecord::Base.establish_connection(@config)
 	# has_and_belongs_to_many requires a connection so configure the
         # associations here rather than in the class definitions above.
        end
 
       def user_by_jid(jid)
-        jid = JID.new(jid).bare.to_s
-        Sql::User.where(email: jid).first
+        #jid = JID.new(user_from_jid(jid)).bare.to_s
+        Sql::User.where(id: user_from_jid(jid)).first
+      end
+
+       def jid_by_user(user)
+       "#{user.id}@wsstudio.tk"
+      end
+
+      def user_from_jid(jid)
+        jid.split("@")[0].to_i
       end
 
       def fragment_by_jid(jid, node)

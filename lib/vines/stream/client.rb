@@ -30,7 +30,7 @@ module Vines
       end
 	
 	 def encrypt?
-		!@store.files_for_domain(@config.default_domain || domain).nil?
+		!@store.files_for_domain(domain).nil?
 	end
 
       # Return an array of allowed authentication mechanisms advertised as
